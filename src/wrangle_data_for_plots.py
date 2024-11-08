@@ -25,10 +25,31 @@ def rescale_with_midpoint(data, midpoint=0):
     return np.vectorize(rescale_func)(data)
 
 def get_value_box_data(data):
-    value_descriptions = ["Surveys completed", "Average goodness rating", "Activities logged", "Unique activities logged", "Average activity rating"]
+    value_descriptions = [
+        "Surveys completed", 
+        "Longest survey completion streak", 
+        "Average goodness rating", 
+        "Total activities logged", 
+        "Unique activities logged", 
+        "Average activity rating"
+    ]
+
+    longest_streak = (
+        data
+        .filter(["survey_id", "date"])
+        .drop_duplicates()
+        .reset_index(drop=True)
+        .assign(streak_breaks = lambda x: x["date"].diff() != pd.Timedelta("1d"))
+        .assign(streak_groups = lambda x: x["streak_breaks"].cumsum())
+        .groupby("streak_groups")
+        .agg({"date":"count"})
+        .max()
+        .iloc[0]
+    )
 
     value_box_stats = pd.DataFrame({
         "n_surveys": [data["survey_id"].drop_duplicates().shape[0]],
+        "longest_streak_days": [longest_streak],
         "avg_goodness": [data[["survey_id", "goodness_score"]].drop_duplicates()["goodness_score"].mean().round(1)],
         "n_activities": [data[["survey_id", "activity_id"]].drop_duplicates().shape[0]],
         "n_distinct_activities": [data[["activity_id"]].drop_duplicates().shape[0]],
@@ -193,6 +214,8 @@ def get_goodness_and_activity_endorsement_data(data):
     goodness_and_activity_endorsments = (
         data
         .filter(["date", "day_of_week", "day_name", "goodness_score", "activity_id"])
+        .drop_duplicates()
+        .reset_index(drop=True)
         .assign(value = 1)
         .pivot(columns="activity_id", values="value", index=["date", "day_of_week", "day_name", "goodness_score"])
         .fillna(0)
@@ -205,6 +228,8 @@ def get_goodness_and_activity_rating_data(data):
     goodness_and_activity_ratings = (
         data
         .filter(["date", "day_of_week", "day_name", "goodness_score", "activity_id", "activity_score"])
+        .drop_duplicates()
+        .reset_index(drop=True)
         .assign(activity_score = lambda x: x["activity_score"].replace({-1:np.nan}))
         .assign(activity_score_average = lambda x: x.groupby("activity_id")["activity_score"].transform("mean"))
         .assign(activity_score_above_average = lambda x: np.where(x["activity_score"] > x["activity_score_average"], 1, 0))

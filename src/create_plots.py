@@ -30,11 +30,12 @@ def generate_custom_cmap(pal=["redyellowgreen", "indigo"], cmap_type=["discrete"
 def get_cmap_hexcodes(cmap, n_colors):
     return [matplotlib.colors.to_hex(cmap(i)) for i in range(n_colors)]
 
-def create_value_boxes(value_box_data, include_n_activities=False, width=12, height=1.5):
+def create_value_boxes(value_box_data):
     INDIGO = "#3F51B5"
-
-    if not include_n_activities:
-        value_box_data = value_box_data.query("variable != 'n_activities'")
+    WIDTH=12
+    HEIGHT=2.5
+    NROW=2
+    NCOL=3
 
     plot = (
         p9.ggplot(data = value_box_data)
@@ -59,7 +60,8 @@ def create_value_boxes(value_box_data, include_n_activities=False, width=12, hei
             family="DejaVu Sans",
             fontweight="bold"
         )
-        + p9.facet_wrap("~variable", nrow=1)
+        + p9.facet_wrap("~variable", nrow=NROW, ncol=NCOL)
+        + p9.scale_x_continuous(expand=[0, 0])
         + p9.labs(
             x="",
             y="",
@@ -67,10 +69,11 @@ def create_value_boxes(value_box_data, include_n_activities=False, width=12, hei
         )
         + p9.theme_void()
         + p9.theme(
-            figure_size=(width, height),
+            figure_size=(WIDTH, HEIGHT),
             legend_position="none",
             plot_margin=0,
-            panel_spacing=-0.01,
+            panel_spacing_x=0.01,
+            panel_spacing_y=0,
             panel_grid_major=p9.element_blank(),
             panel_grid_minor=p9.element_blank(),
             panel_background=p9.element_rect(fill="white"),
@@ -84,14 +87,16 @@ def create_value_boxes(value_box_data, include_n_activities=False, width=12, hei
     )
     return plot
 
-def create_goodness_bar_plot(goodness_bar_plot_data, cmap_hexcodes, title=False):
-    RATING_MIN = 0
-    RATING_MAX = 10
+def create_goodness_bar_plot(goodness_bar_plot_data, cmap_hexcodes):
+    xlims = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] 
+    ylim = goodness_bar_plot_data["n_days"].max()
 
-    if title:
-        plot_title = "Goodness rating frequency"
+    if ylim < 5:
+        ybreaks = range(0, ylim+1, 1)
+        height = 3 
     else:
-        plot_title = ""
+        ybreaks = range(0, ylim+1, 2)
+        height = 5
 
     plot = (
         p9.ggplot()
@@ -109,17 +114,16 @@ def create_goodness_bar_plot(goodness_bar_plot_data, cmap_hexcodes, title=False)
             color="white",
             alpha=0.7
         )
-        + p9.scale_y_continuous(expand=[0, 0])
-        + p9.scale_x_discrete(limits=list(np.arange(RATING_MIN, RATING_MAX+1)))
+        + p9.scale_y_continuous(expand=[0, 0], breaks=ybreaks)
+        + p9.scale_x_discrete(limits=xlims)
         + p9.scale_fill_manual(values=cmap_hexcodes)
         + p9.labs(
             x="Goodness rating",
-            y="Number of days",
-            title=plot_title
+            y="Number of days"
         )
         + p9.theme_bw()
         + p9.theme(
-            figure_size=(10, 5),
+            figure_size=(10, height),
             legend_position="none",
             panel_grid_major_x=p9.element_blank(),
             panel_grid_minor_x=p9.element_blank(),
@@ -222,6 +226,7 @@ def create_goodness_range_plot(goodness_range_plot_data, goodness_range_plot_gra
             family="DejaVu Sans",
             color="black"
         )
+        + p9.scale_y_discrete(limits=["Sunday", "Saturday", "Friday", "Thursday", "Wednesday", "Tuesday", "Monday", "Overall"])
         + p9.scale_x_continuous(limits=[-1, 11], breaks=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], expand=[0, 0])
         + p9.scale_fill_gradientn(colors=cmap_hexcodes, limits=[0, 10])
         + p9.scale_color_gradientn(colors=cmap_hexcodes, limits=[0, 10])
@@ -245,6 +250,13 @@ def create_goodness_range_plot(goodness_range_plot_data, goodness_range_plot_gra
     return plot 
 
 def create_activity_bar_plot(activity_frequencies, cmap_hexcodes):
+    ylim = activity_frequencies["activity_name_count"].max()
+
+    if ylim < 5:
+        ybreaks = range(0, ylim+1, 1)
+    else:
+        ybreaks = range(0, ylim+1, 2)
+
     plot = (
         p9.ggplot()
         + p9.geom_bar(
@@ -746,6 +758,63 @@ def create_rating_scatterplot(rating_scatterplot_data, cmap_hexcodes):
         + p9.scale_x_continuous(limits=[0, 10], breaks=[0, 2, 4, 6, 8, 10], expand=[0, 1, 0, 1])
         + p9.scale_y_continuous(limits=[0, 10], breaks=[0, 2, 4, 6, 8, 10], expand=[0, 1, 0, 1])
         + p9.scale_color_gradientn(colors=cmap_hexcodes)
+        + p9.labs(
+            x="Goodness rating",
+            y="Activity rating"
+        )
+        + p9.theme_bw()
+        + p9.theme(
+            figure_size=(10, 10),
+            legend_position="none",
+            panel_grid_minor=p9.element_blank(),
+            strip_text=p9.element_text(family="DejaVu Sans", size=10, face="bold", color="white"),
+            strip_background=p9.element_rect(fill="#3F51B5"),
+            axis_text=p9.element_text(family="DejaVu Sans", size=12),
+            axis_title=p9.element_text(family="DejaVu Sans", size=12, face="bold"),
+            axis_ticks=p9.element_line(color="white"),
+            plot_title=p9.element_text(family="DejaVu Sans", face="bold", size=12, ha="left")
+        )
+    )
+    return plot
+
+def create_rating_scatterplot_with_correlations(rating_scatterplot_data, corr_lollipop_plot_data, cmap_hexcodes):
+    scatterplot_activities = rating_scatterplot_data.dropna()["activity_name"].drop_duplicates().tolist()
+
+    scatterplot_annotations = (
+        corr_lollipop_plot_data
+        .filter(["activity_name", "r"], axis=1)
+        .query("activity_name in @scatterplot_activities")
+        .assign(
+            r_cat = lambda x: x["r"].case_when([
+                (x["r"] == 0, np.nan), 
+                (x["r"] < 0, 0),
+                (x["r"] > 0, 10),
+            ]),
+            label = lambda x: "r=" + x["r"].round(2).astype(str),
+            x = 0,
+            y = 0
+        )
+    )
+
+    plot = (
+        p9.ggplot(data=rating_scatterplot_data.dropna())
+        + p9.geom_point(
+            mapping=p9.aes(x="goodness_score", y="activity_score", color="goodness_score"),
+            size=5,
+            alpha=0.7
+        )
+        + p9.geom_text(
+            data = scatterplot_annotations,
+            mapping = p9.aes(x="x", y="y", label="label", color="r_cat"),
+            parse=True,
+            ha="left",
+            nudge_y=-0.5,
+            nudge_x=-0.5
+        )
+        + p9.facet_wrap("activity_name", ncol=4)
+        + p9.scale_x_continuous(limits=[-0.5, 10.5], breaks=[0, 2, 4, 6, 8, 10], expand=[0, 0.5, 0, 0.5])
+        + p9.scale_y_continuous(limits=[-0.5, 10.5], breaks=[0, 2, 4, 6, 8, 10], expand=[0, 0.5, 0, 0.5])
+        + p9.scale_color_gradientn(colors=cmap_hexcodes, na_value="grey")
         + p9.labs(
             x="Goodness rating",
             y="Activity rating"

@@ -1,58 +1,27 @@
 ---
-title: "BALANCE mid-study report for testjen"
-author: "Mobile Sensing + Health Institute"
-date: today
-format: 
-    html:
-        toc: true
-        toc-location: left
-        number-sections: false
-        theme: cosmo
-        max-width: 2400px
-        fontsize: 1em
-        self-contained: true
-        embed-resources: true
-        fig-dpi: 2000
-        fig-align: right
-        page-layout: full
-        linkcolor: "#3F51B5"
-        toc-color: "#3F51B5"
-echo: false
-message: false 
-warning: false
-from: "markdown+emoji"
 ---
+
+```{python}
+#| tags: [parameters]
+pid = "testjen"
+```
 
 ```{python}
 #| echo: false
 import pandas as pd 
 import plotnine as p9 
 
+from great_tables import *
 from pull_data import pull_daily_survey_data
 from wrangle_data_for_plots import *
 from create_plots import *
+from create_tables import *
 
 import warnings
 warnings.filterwarnings("ignore")
 ```
 
 ```{python}
-def get_enjoyment_per_activity(activity_data):
-    enjoyment_per_activity = (
-        activity_data
-        .assign(activity_score = lambda x: np.where(x["activity_score"] == -1, np.nan, x["activity_score"]))
-        .groupby(["activity_id", "activity_name"])
-        .agg({"activity_name": ["count"], "activity_score": ["mean", "min", "max"]})
-        .reset_index()
-        .pipe(flatten_columns)
-    )
-    return enjoyment_per_activity
-```
-
-```{python}
-#| echo: false
-pid = "testjen"
-
 score_min = 0
 score_max = 10
 score_na = -1
@@ -69,7 +38,6 @@ frequency_cmap_hexcodes = get_cmap_hexcodes(frequency_cmap_discrete, n_colors=le
 ```
 
 ```{python}
-#| echo: false
 survey_data = pull_daily_survey_data(pid)
 
 # phase 1 summary
@@ -77,7 +45,7 @@ value_box_data = get_value_box_data(survey_data)
 
 # goodness
 goodness_data = get_goodness_data(survey_data)
-goodness_bar_plot_data = get_goodness_bar_plot_data(goodness_data, score_categories)
+goodness_bar_plot_data = get_goodness_bar_plot_data(goodness_data, scores)
 goodness_data_per_day = get_goodness_data_per_day(goodness_data)
 goodness_range_plot_data = get_goodness_range_plot_data(goodness_data_per_day)
 goodness_range_plot_gradient_data = get_goodness_range_plot_gradient_data(goodness_range_plot_data)
@@ -121,13 +89,8 @@ Thank you for completing Phase 1 of the BALANCE study! During this phase, each e
 Here's a snapshot of your month:    
 
 ```{python}
-#| echo: false
-
-#Alternative section title: ## Thank you! :tada:
-create_value_boxes(value_box_data, include_n_activities=False, width=12, height=1)
+create_value_boxes(value_box_data)
 ```
-
-<br>
 
 We will review your goodness and activity data from Phase 1 to help you identify a handful of meaningful activities to focus on in Phase 2. 
 
@@ -144,8 +107,10 @@ This plot displays how often you rated a day a given goodness rating on a scale 
 
 
 ```{python}
-#| echo: false
-create_goodness_bar_plot(goodness_bar_plot_data, goodness_cmap_hexcodes, title=False)
+create_goodness_bar_plot(
+    goodness_bar_plot_data, 
+    goodness_cmap_hexcodes
+)
 ```
 
 
@@ -157,8 +122,11 @@ This plot displays your average and range of goodness ratings. The width of each
 :::
 
 ```{python}
-#| echo: false
-create_goodness_range_plot(goodness_range_plot_data, goodness_range_plot_gradient_data, goodness_cmap_hexcodes)
+create_goodness_range_plot(
+    goodness_range_plot_data, 
+    goodness_range_plot_gradient_data, 
+    goodness_cmap_hexcodes
+)
 ```
 
 <br>
@@ -176,15 +144,18 @@ These plots display how often you did each activity and the average and range of
 ::: {layout-ncol=2}
 
 ```{python}
-#| echo: false
-create_activity_bar_plot(activity_frequencies, goodness_cmap_hexcodes)
-
-# .column-page ?
+create_activity_bar_plot(
+    activity_frequencies, 
+    goodness_cmap_hexcodes
+)
 ```
 
 ```{python}
-#| echo: false
-create_activity_range_plot(activity_range_plot_data, activity_range_plot_gradient_data, goodness_cmap_hexcodes)
+create_activity_range_plot(
+    activity_range_plot_data, 
+    activity_range_plot_gradient_data, 
+    goodness_cmap_hexcodes
+)
 ```
 
 :::
@@ -194,40 +165,40 @@ create_activity_range_plot(activity_range_plot_data, activity_range_plot_gradien
 ### Activity occurrence by day of week
 
 ::: {.callout-tip collapse="true"}
-## How to read the plot
-This plot displays the percent of days on which you did activity **Y** among all days of the week **X**. Darker blue colors reflect that you did activity **Y** more often on day of week **X**, while lighter blue colors reflect that you did activity **Y** less often on day of week **X**. The darkest blue corresponds to 100% and white corresponds to 0%. Activities are ordered by their overall frequency. 
+## How to read the table
+The table displays how often you did each activity on different days of the week. Each value reflects the percent of all days of week **X** on which you did activity **Y**. Activities are arranged in order of their overall frequency. Activities that you did every day have been omitted. 
 :::
 
 ```{python}
-create_activity_occurrence_by_day_of_week_heatmap(activity_occurrence_by_day_of_week_data, frequency_cmap_hexcodes)
+#| html-table-processing: none
+create_activity_day_of_week_table(
+    activity_data, 
+    activity_frequencies, 
+    activity_occurrence_by_day_of_week_data, 
+    ordered_activities_list
+)
 ```
 
 <br>
 
-### Activity co-occurrence
+### Related activities
 
 ::: {.callout-tip collapse="true"}
-## How to read the plot
-This plot displays the percent of days on which you did activity **Y** that you also did activity **X**. Darker blue colors reflect that on days you did activity **Y**, you also did activity **X** more often, while lighter blue colors reflect that on days you did activity **Y**, you also did activity **X** less often. The darkest blue corresponds to 100% and white corresponds to 0%. Activities are ordered by their overall frequency. 
+## How to read the table
+This table displays on days you did each activity how frequently you also did other activities. **Never** is defined as 0%, **Rarely** as more than 0% but less than 33%, **Sometimes** as 33% or more but less than 67%, **Often** as 67% or more but less than 100%, and **Always** as 100% of days on which you did activity **Y**. Activities are arranged in order of their overall frequency, and related activities are arranged by percent. Activities that you did every day have been omitted from both activites and related activities. 
+
+
 :::
 
 ```{python}
-#| echo: false
-create_activity_co_occurrence_heatmap(activity_co_occurrence_data, frequency_cmap_hexcodes)
-```
-
-<br>
-
-### Activity clusters 
-
-::: {.callout-tip collapse="true"}
-## How to read the plot
-Activities were grouped into 5 clusters based on their similarity using unsupervised hierarchical clustering. The plot displays the unique activities belonging to cluster **X** stacked above their assigned cluster number. The cluster number is just an identifier and otherwise has no meaning. The color of the activity label reflects its overall frequency.
-:::
-
-```{python}
-#create_activity_cluster_plot(activity_clusters, frequency_cmap_hexcodes[1:][:-3]) #The color of the activity label is assigned based on the cluster number.
-create_activity_cluster_plot(activity_clusters, goodness_cmap_hexcodes, fill_var="activity_name_count")
+#| html-table-processing: none
+create_related_activities_table(
+    activity_data, 
+    activity_frequencies, 
+    activity_co_occurrence_data, 
+    ordered_activities_list, 
+    frequency_cmap_hexcodes
+)
 ```
 
 <br>
@@ -243,20 +214,16 @@ This plot displays your average and range of goodness ratings on days you did ea
 :::
 
 ```{python}
-"""
-::: {.callout-tip collapse="true"}
-## How to read the plot
-The color of the vertical ribbon reflects your goodness rating on day **X**. The days on which you did activity **Y** are indicated with a star. Activities are ordered by their overall frequency.   
-:::
-"""
-# create_activity_tile_plot(goodness_activity_tile_plot_data, ordered_activities_list, goodness_cmap_hexcodes, include_legend=True)
-create_goodness_by_activity_range_plot(goodness_by_activity_range_plot_gradient_data, goodness_by_activity_range_plot_data, goodness_cmap_hexcodes)
+create_goodness_by_activity_range_plot(
+    goodness_by_activity_range_plot_gradient_data, 
+    goodness_by_activity_range_plot_data, 
+    goodness_cmap_hexcodes
+)
 ```
 
 <br>
 
 ### Difference in average goodness by activity occurrence
-
 
 ::: {.callout-tip collapse="true"}
 ## How to read the plot
@@ -264,8 +231,11 @@ This plot displays the percent difference in average goodness rating on days you
 :::
 
 ```{python}
-#| echo: false
-create_activity_lollipop_plot(activity_lollipop_plot_data, goodness_cmap_hexcodes, "Days you did vs. did not do the activity")
+create_activity_lollipop_plot(
+    activity_lollipop_plot_data, 
+    goodness_cmap_hexcodes, 
+    "Days you did vs. did not do the activity"
+)
 ```
 
 <br>
@@ -278,8 +248,11 @@ This plot displays the percent difference in average goodness rating on days you
 :::
 
 ```{python}
-#| echo: false
-create_activity_lollipop_plot(activity_rating_lollipop_plot_data, goodness_cmap_hexcodes, "Days you rated the activity higher than average vs. average or lower")
+create_activity_lollipop_plot(
+    activity_rating_lollipop_plot_data, 
+    goodness_cmap_hexcodes, 
+    "Days you rated the activity higher than average vs. average or lower"
+)
 ```
 
 <br>
@@ -289,19 +262,17 @@ create_activity_lollipop_plot(activity_rating_lollipop_plot_data, goodness_cmap_
 ::: {.callout-tip collapse="true"}
 ## How to read the plot
 In this plot, for each activity, your daily activity ratings (**Y**) are plotted against your same-day daily goodness ratings (**X**). The color of each point reflects the daily goodness rating. Activities that did not have at least one activity rating are omitted. Activities are arranged in alphabetical order. 
+
+The value in the lower left corner of each plot is the Spearman correlation coefficient between your daily activity ratings and your same-day goodness ratings. A **negative correlation (red)** reflects that the higher (or lower) you rated your enjoyment of an activity the lower (or higher) you tended to rate your same-day goodness (or vice versa). A **positive correlation (green)** reflects that the higher (or lower) you rated your enjoyment of an activity, the higher (or lower) you tended to rate your same-day goodness (or vice versa). Larger correlation coefficient values reflect that these associations are stronger. Correlations between goodness and activity ratings are equal to 0 (grey) if there is no association, or if there was not enough variability in your ratings.   
 :::
 
 ```{python}
-create_rating_scatterplot(rating_scatterplot_data, goodness_cmap_hexcodes)
+create_rating_scatterplot_with_correlations(
+    rating_scatterplot_data, 
+    correlation_lollipop_plot_data, 
+    goodness_cmap_hexcodes
+)
 ```
 
 <br>
-
-::: {.callout-tip collapse="true"}
-## How to read the plot
-This plot displays for each activity the correlation between your daily activity ratings and your same-day goodness ratings. On the left half of the plot, there is a **negative** correlation between your enjoyment of activity **Y** and your same-day goodness rating. In other words, the higher (or lower) you rated your enjoyment of activity **Y**, the lower (or higher) you tended to rate your same-day goodness (or vice versa). On the right half of the plot, there is a **positive** correlation between your enjoyment of activity **Y** and your same-day goodness rating. In other words, the higher (or lower) you rated your enjoyment of activity **Y**, the higher (or lower) you tended to rate your same-day goodness (or vice versa). Larger correlation coefficient values reflect that these associations are stronger. Correlations between goodness and activity ratings are equal to 0 if there is no association, if you never rated the activity, or if there was not enough variability in your ratings.   
-:::
-
-```{python}
-create_correlation_lollipop_plot(correlation_lollipop_plot_data, goodness_cmap_hexcodes, corr_method="Spearman")
-```
+<br>

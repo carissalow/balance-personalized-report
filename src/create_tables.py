@@ -100,6 +100,11 @@ def create_related_activities_table(activity_data, activity_frequencies, activit
 
     activity_rows = related_activities_data.query("Activity != ''").index.tolist()
 
+    if related_activities_data.shape[0] < 10:
+        container_height="300px"
+    else:
+        container_height="600px"
+
     table = (
         GT(related_activities_data)
         .opt_table_font(font=google_font("Source Sans 3"))
@@ -138,7 +143,7 @@ def create_related_activities_table(activity_data, activity_frequencies, activit
         .tab_options(
             table_width="100%",
             table_layout="auto",
-            container_height="600px",
+            container_height=container_height,
             container_overflow_y="True",
             table_body_hlines_color="white",
             table_body_hlines_width="0px",

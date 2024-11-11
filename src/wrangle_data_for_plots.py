@@ -16,10 +16,12 @@ def rescale_with_midpoint(data, midpoint=0):
     max_val = np.max(data)
 
     # Adjust the midpoint to fall within the range [0, 1]
-    midpoint_scaled = (midpoint - min_val) / (max_val - min_val)
+    # midpoint_scaled = (midpoint - min_val) / (max_val - min_val)
     def rescale_func(x):
-        if x <= midpoint:
+        if x <= midpoint & midpoint != min_val:
             return 0.5 * (x - min_val) / (midpoint - min_val)
+        elif x <= midpoint & midpoint == min_val:
+            return 0.5 #* (x - min_val) / (midpoint - min_val)
         else:
             return 0.5 + 0.5 * (x - midpoint) / (max_val - midpoint)
     return np.vectorize(rescale_func)(data)
@@ -34,32 +36,43 @@ def get_value_box_data(data):
         "Average activity rating"
     ]
 
-    longest_streak = (
-        data
-        .filter(["survey_id", "date"])
-        .drop_duplicates()
-        .reset_index(drop=True)
-        .assign(streak_breaks = lambda x: x["date"].diff() != pd.Timedelta("1d"))
-        .assign(streak_groups = lambda x: x["streak_breaks"].cumsum())
-        .groupby("streak_groups")
-        .agg({"date":"count"})
-        .max()
-        .iloc[0]
-    )
+    if not data.empty:
+        longest_streak = (
+            data
+            .filter(["survey_id", "date"])
+            .drop_duplicates()
+            .reset_index(drop=True)
+            .assign(streak_breaks = lambda x: x["date"].diff() != pd.Timedelta("1d"))
+            .assign(streak_groups = lambda x: x["streak_breaks"].cumsum())
+            .groupby("streak_groups")
+            .agg({"date":"count"})
+            .max()
+            .iloc[0]
+        )
 
-    value_box_stats = pd.DataFrame({
-        "n_surveys": [data["survey_id"].drop_duplicates().shape[0]],
-        "longest_streak_days": [longest_streak],
-        "avg_goodness": [data[["survey_id", "goodness_score"]].drop_duplicates()["goodness_score"].mean().round(1)],
-        "n_activities": [data[["survey_id", "activity_id"]].drop_duplicates().shape[0]],
-        "n_distinct_activities": [data[["activity_id"]].drop_duplicates().shape[0]],
-        "avg_activity_score": [data["activity_score"].replace(-1, np.nan).mean().round(1)]
-    })
+        value_box_stats = pd.DataFrame({
+            "n_surveys": [data["survey_id"].drop_duplicates().shape[0]],
+            "longest_streak_days": [longest_streak],
+            "avg_goodness": [data[["survey_id", "goodness_score"]].drop_duplicates()["goodness_score"].mean().round(1)],
+            "n_activities": [data[["survey_id", "activity_id"]].drop_duplicates().shape[0]],
+            "n_distinct_activities": [data[["activity_id"]].drop_duplicates().shape[0]],
+            "avg_activity_score": [data["activity_score"].replace(-1, np.nan).mean().round(1) if not np.isnan(data["activity_score"].replace(-1, np.nan).mean()) else np.nan]
+        })
+
+    else:
+        value_box_stats = pd.DataFrame({
+            "n_surveys": [0],
+            "longest_streak_days": [0],
+            "avg_goodness": [np.nan],
+            "n_activities": [0],
+            "n_distinct_activities": [0],
+            "avg_activity_score": [np.nan]
+        })
 
     value_box_data = (
         value_box_stats
         .melt()
-        .assign(value=lambda x: x["value"].map("{:.1f}".format).str.replace(".0", ""))
+        .assign(value=lambda x: x["value"].map("{:.1f}".format).str.replace(".0", "").str.replace("nan", "N/A"))
         .assign(description=value_descriptions)
         .assign(variable = lambda x: pd.Categorical(x["variable"], categories=x["variable"].tolist()))
         .assign(
@@ -281,10 +294,8 @@ def get_activity_co_occurrence_data(activity_frequencies, goodness_and_activity_
 
     activities_for_co_occur = activity_data_for_co_occur.columns.tolist() 
     for activity in activities_for_co_occur:
-        row_query = f"{activity} == 1"
         row_data = (
-            activity_data_for_co_occur
-            .query(row_query)
+            activity_data_for_co_occur[activity_data_for_co_occur[activity] == 1]
             .sum(axis=0)
             .reset_index()
             .rename(columns={"index": "also_did_activity_id", 0:"n_days"})
@@ -389,49 +400,58 @@ def get_activity_tile_plot_data(activity_frequencies, goodness_and_activity_endo
     return goodness_activity_tile_plot_data
 
 def get_activity_lollipop_plot_data(data, goodness_and_activity_endorsments):
-    non_activity_columns = ["date", "day_of_week", "day_name", "goodness_score"]
-    activities_list = [col for col in goodness_and_activity_endorsments.columns.tolist() if not any(match in col for match in non_activity_columns)]
+    if goodness_and_activity_endorsments.empty:
+        lollipop_plot_data = pd.DataFrame(columns=["activity_id", "average_goodness_yes", "average_goodness_no", "percent_difference", "segment_end", "activity_name", "label"])
+
+    else:
+        non_activity_columns = ["date", "day_of_week", "day_name", "goodness_score"]
+        activities_list = [col for col in goodness_and_activity_endorsments.columns.tolist() if not any(match in col for match in non_activity_columns)]
     
-    average_goodness_by_endorsement = pd.DataFrame()
-    for activity in activities_list:
-        average_goodness_per_activity = (
-            goodness_and_activity_endorsments
-            .groupby([activity])
-            .agg({"goodness_score":"mean"})
+        average_goodness_by_endorsement = pd.DataFrame()
+        for activity in activities_list:
+            average_goodness_per_activity = (
+                goodness_and_activity_endorsments
+                .groupby([activity])
+                .agg({"goodness_score":"mean"})
+                .reset_index()
+                .melt(id_vars="goodness_score")
+            )
+            average_goodness_by_endorsement = pd.concat([average_goodness_by_endorsement, average_goodness_per_activity], axis=0).reset_index(drop=True)
+
+        average_goodness_by_endorsement = (
+            average_goodness_by_endorsement
+            .pivot(columns="value", values="goodness_score", index="variable")
             .reset_index()
-            .melt(id_vars="goodness_score")
+            .rename_axis(None, axis=1)
+            .rename(columns={"variable":"activity_id", 0.0:"average_goodness_no", 1.0:"average_goodness_yes"})
         )
-        average_goodness_by_endorsement = pd.concat([average_goodness_by_endorsement, average_goodness_per_activity], axis=0).reset_index(drop=True)
 
-    average_goodness_by_endorsement = (
-        average_goodness_by_endorsement
-        .pivot(columns="value", values="goodness_score", index="variable")
-        .reset_index()
-        .rename_axis(None, axis=1)
-        .rename(columns={"variable":"activity_id", 0.0:"average_goodness_no", 1.0:"average_goodness_yes"})
-    )
+        if not "average_goodness_no" in average_goodness_by_endorsement.columns:
+            average_goodness_by_endorsement["average_goodness_no"] = np.nan
+        if not "average_goodness_yes" in average_goodness_by_endorsement.columns:
+            average_goodness_by_endorsement["average_goodness_yes"] = np.nan
 
-    lollipop_plot_data = (
-        average_goodness_by_endorsement
-        .assign(
-            percent_difference = lambda x: ((x["average_goodness_yes"] - x["average_goodness_no"])/x["average_goodness_no"]*100).round(1),
-            segment_end=0
-        )
-        .fillna({"percent_difference": 0})
-        .sort_values("percent_difference")
-        .merge(data[["activity_id", "activity_name"]].drop_duplicates(), how="left", on="activity_id")
-        .assign(
+        lollipop_plot_data = (
+            average_goodness_by_endorsement
+            .assign(
+                percent_difference = lambda x: ((x["average_goodness_yes"] - x["average_goodness_no"])/x["average_goodness_no"]*100).round(1),
+                segment_end=0
+            )
+            .fillna({"percent_difference": 0})
+            .sort_values("percent_difference")
+            .merge(data[["activity_id", "activity_name"]].drop_duplicates(), how="left", on="activity_id")
+            .assign(
             label = lambda x: x["percent_difference"].astype(str).str.replace("-", "") + "%"
+            )
         )
-    )
 
-    lollipop_plot_data_activity_cats = lollipop_plot_data["activity_name"].tolist()
+        lollipop_plot_data_activity_cats = lollipop_plot_data["activity_name"].tolist()
 
-    lollipop_plot_data = (
-        lollipop_plot_data
-        .assign(activity_name = lambda x: pd.Categorical(x["activity_name"], categories=lollipop_plot_data_activity_cats))
-        .assign(percent_difference_rescaled = lambda x: rescale_with_midpoint(x["percent_difference"], 0))
-    )
+        lollipop_plot_data = (
+            lollipop_plot_data
+            .assign(activity_name = lambda x: pd.Categorical(x["activity_name"], categories=lollipop_plot_data_activity_cats))
+            .assign(percent_difference_rescaled = lambda x: rescale_with_midpoint(x["percent_difference"], 0))
+        )
 
     return lollipop_plot_data
 

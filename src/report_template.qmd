@@ -39,45 +39,41 @@ frequency_cmap_hexcodes = get_cmap_hexcodes(frequency_cmap_discrete, n_colors=le
 
 ```{python}
 survey_data = pull_daily_survey_data(pid)
-
-# phase 1 summary
 value_box_data = get_value_box_data(survey_data)
 
-# goodness
-goodness_data = get_goodness_data(survey_data)
-goodness_bar_plot_data = get_goodness_bar_plot_data(goodness_data, scores)
-goodness_data_per_day = get_goodness_data_per_day(goodness_data)
-goodness_range_plot_data = get_goodness_range_plot_data(goodness_data_per_day)
-goodness_range_plot_gradient_data = get_goodness_range_plot_gradient_data(goodness_range_plot_data)
+if not survey_data.empty:
+    # goodness
+    goodness_data = get_goodness_data(survey_data)
+    goodness_bar_plot_data = get_goodness_bar_plot_data(goodness_data, scores)
+    goodness_data_per_day = get_goodness_data_per_day(goodness_data)
+    goodness_range_plot_data = get_goodness_range_plot_data(goodness_data_per_day)
+    goodness_range_plot_gradient_data = get_goodness_range_plot_gradient_data(goodness_range_plot_data)
 
-# activities
-activity_data = get_activity_data(survey_data)
-enjoyment_per_activity = get_enjoyment_per_activity(activity_data)
-activity_frequencies = get_activity_bar_plot_data(enjoyment_per_activity)
+    # activities
+    activity_data = get_activity_data(survey_data)
+    enjoyment_per_activity = get_enjoyment_per_activity(activity_data)
+    activity_frequencies = get_activity_bar_plot_data(enjoyment_per_activity)
 
-ordered_activities_list = get_activity_list_ordered_by_frequency(activity_frequencies)
+    ordered_activities_list = get_activity_list_ordered_by_frequency(activity_frequencies)
 
-activity_range_plot_data = get_activity_range_plot_data(enjoyment_per_activity)
-activity_range_plot_gradient_data = get_activity_range_plot_gradient_data(activity_range_plot_data)
+    activity_range_plot_data = get_activity_range_plot_data(enjoyment_per_activity)
+    activity_range_plot_gradient_data = get_activity_range_plot_gradient_data(activity_range_plot_data)
 
-# goodness and activities
-goodness_and_activity_endorsements = get_goodness_and_activity_endorsement_data(survey_data)
-goodness_and_activity_ratings = get_goodness_and_activity_rating_data(survey_data)
+    # goodness and activities
+    goodness_and_activity_endorsements = get_goodness_and_activity_endorsement_data(survey_data)
+    goodness_and_activity_ratings = get_goodness_and_activity_rating_data(survey_data)
 
-activity_occurrence_by_day_of_week_data = get_activity_occurrence_by_day_of_week_data(survey_data, goodness_and_activity_endorsements, ordered_activities_list)
-activity_co_occurrence_data = get_activity_co_occurrence_data(activity_frequencies, goodness_and_activity_endorsements)
-activity_clusters = get_activity_clusters(goodness_and_activity_endorsements, activity_frequencies, n_clusters=5)
+    activity_occurrence_by_day_of_week_data = get_activity_occurrence_by_day_of_week_data(survey_data, goodness_and_activity_endorsements, ordered_activities_list)
+    activity_co_occurrence_data = get_activity_co_occurrence_data(activity_frequencies, goodness_and_activity_endorsements)
 
-goodness_activity_tile_plot_data = get_activity_tile_plot_data(activity_frequencies, goodness_and_activity_endorsements, scores)
+    goodness_by_activity_range_plot_data = get_goodness_by_activity_range_plot_data(activity_data, goodness_data)
+    goodness_by_activity_range_plot_gradient_data = get_goodness_by_activity_range_plot_gradient_data(goodness_by_activity_range_plot_data)
 
-goodness_by_activity_range_plot_data = get_goodness_by_activity_range_plot_data(activity_data, goodness_data)
-goodness_by_activity_range_plot_gradient_data = get_goodness_by_activity_range_plot_gradient_data(goodness_by_activity_range_plot_data)
+    activity_lollipop_plot_data = get_activity_lollipop_plot_data(survey_data, goodness_and_activity_endorsements)
+    activity_rating_lollipop_plot_data = get_activity_lollipop_plot_data(survey_data, goodness_and_activity_ratings)
 
-activity_lollipop_plot_data = get_activity_lollipop_plot_data(survey_data, goodness_and_activity_endorsements)
-activity_rating_lollipop_plot_data = get_activity_lollipop_plot_data(survey_data, goodness_and_activity_ratings)
-
-rating_scatterplot_data = get_rating_scatterplot_data(activity_data, goodness_data)
-correlation_lollipop_plot_data = get_correlation_lollipop_plot_data(activity_data, goodness_data, corr_method="spearman")
+    rating_scatterplot_data = get_rating_scatterplot_data(activity_data, goodness_data)
+    correlation_lollipop_plot_data = get_correlation_lollipop_plot_data(activity_data, goodness_data, corr_method="spearman")
 ```
 
 <br>
@@ -107,10 +103,14 @@ This plot displays how often you rated a day a given goodness rating on a scale 
 
 
 ```{python}
-create_goodness_bar_plot(
-    goodness_bar_plot_data, 
-    goodness_cmap_hexcodes
-)
+if survey_data.empty:
+    plot = create_placeholder("plot")
+else: 
+    plot = create_goodness_bar_plot(
+        goodness_bar_plot_data, 
+        goodness_cmap_hexcodes
+    )
+plot
 ```
 
 
@@ -122,11 +122,15 @@ This plot displays your average and range of goodness ratings. The width of each
 :::
 
 ```{python}
-create_goodness_range_plot(
-    goodness_range_plot_data, 
-    goodness_range_plot_gradient_data, 
-    goodness_cmap_hexcodes
-)
+if survey_data.empty:
+    plot = create_placeholder("plot")
+else: 
+    plot = create_goodness_range_plot(
+        goodness_range_plot_data, 
+        goodness_range_plot_gradient_data, 
+        goodness_cmap_hexcodes
+    )
+plot
 ```
 
 <br>
@@ -144,18 +148,26 @@ These plots display how often you did each activity and the average and range of
 ::: {layout-ncol=2}
 
 ```{python}
-create_activity_bar_plot(
-    activity_frequencies, 
-    goodness_cmap_hexcodes
-)
+if survey_data.empty:
+    plot = create_placeholder("plot", width=5)
+else: 
+    plot = create_activity_bar_plot(
+        activity_frequencies, 
+        goodness_cmap_hexcodes
+    )
+plot
 ```
 
 ```{python}
-create_activity_range_plot(
-    activity_range_plot_data, 
-    activity_range_plot_gradient_data, 
-    goodness_cmap_hexcodes
-)
+if survey_data.empty:
+    plot = create_placeholder("plot", width=5)
+else: 
+    plot = create_activity_range_plot(
+        activity_range_plot_data, 
+        activity_range_plot_gradient_data, 
+        goodness_cmap_hexcodes
+    )
+plot
 ```
 
 :::
@@ -171,12 +183,21 @@ The table displays how often you did each activity on different days of the week
 
 ```{python}
 #| html-table-processing: none
-create_activity_day_of_week_table(
-    activity_data, 
-    activity_frequencies, 
-    activity_occurrence_by_day_of_week_data, 
-    ordered_activities_list
-)
+if survey_data.empty:
+    table = create_placeholder("table")
+else: 
+    n_surveys = len(activity_data["survey_id"].drop_duplicates())
+    constant_activities = activity_frequencies.query("activity_name_count == @n_surveys")["activity_name"].tolist()
+    if len(ordered_activities_list) == len(constant_activities): 
+        table = create_placeholder("table")
+    else:
+        table = create_activity_day_of_week_table(
+            activity_data, 
+            activity_frequencies, 
+            activity_occurrence_by_day_of_week_data, 
+            ordered_activities_list
+        )
+table
 ```
 
 <br>
@@ -192,13 +213,22 @@ This table displays on days you did each activity how frequently you also did ot
 
 ```{python}
 #| html-table-processing: none
-create_related_activities_table(
-    activity_data, 
-    activity_frequencies, 
-    activity_co_occurrence_data, 
-    ordered_activities_list, 
-    frequency_cmap_hexcodes
-)
+if survey_data.empty:
+    table = create_placeholder("table")
+else: 
+    n_surveys = len(activity_data["survey_id"].drop_duplicates())
+    constant_activities = activity_frequencies.query("activity_name_count == @n_surveys")["activity_name"].tolist()
+    if len(ordered_activities_list) == len(constant_activities): 
+        table = create_placeholder("table")
+    else:
+        table = create_related_activities_table(
+            activity_data, 
+            activity_frequencies, 
+            activity_co_occurrence_data, 
+            ordered_activities_list, 
+            frequency_cmap_hexcodes
+        )
+table
 ```
 
 <br>
@@ -214,11 +244,15 @@ This plot displays your average and range of goodness ratings on days you did ea
 :::
 
 ```{python}
-create_goodness_by_activity_range_plot(
-    goodness_by_activity_range_plot_gradient_data, 
-    goodness_by_activity_range_plot_data, 
-    goodness_cmap_hexcodes
+if survey_data.empty:
+    plot = create_placeholder("plot")
+else: 
+    plot = create_goodness_by_activity_range_plot(
+        goodness_by_activity_range_plot_gradient_data, 
+        goodness_by_activity_range_plot_data, 
+        goodness_cmap_hexcodes
 )
+plot
 ```
 
 <br>
@@ -231,11 +265,18 @@ This plot displays the percent difference in average goodness rating on days you
 :::
 
 ```{python}
-create_activity_lollipop_plot(
-    activity_lollipop_plot_data, 
-    goodness_cmap_hexcodes, 
-    "Days you did vs. did not do the activity"
-)
+if survey_data.empty:
+    plot = create_placeholder("plot")
+else: 
+    if activity_rating_lollipop_plot_data.empty:
+        plot = create_placeholder("plot")
+    else:
+        plot = create_activity_lollipop_plot(
+            activity_lollipop_plot_data, 
+            goodness_cmap_hexcodes, 
+            "Days you did vs. did not do the activity"
+        )
+plot
 ```
 
 <br>
@@ -248,11 +289,18 @@ This plot displays the percent difference in average goodness rating on days you
 :::
 
 ```{python}
-create_activity_lollipop_plot(
-    activity_rating_lollipop_plot_data, 
-    goodness_cmap_hexcodes, 
-    "Days you rated the activity higher than average vs. average or lower"
-)
+if survey_data.empty:
+    plot = create_placeholder("plot")
+else: 
+    if activity_rating_lollipop_plot_data.empty:
+        plot = create_placeholder("plot")
+    else:
+        plot = create_activity_lollipop_plot(
+            activity_rating_lollipop_plot_data, 
+            goodness_cmap_hexcodes, 
+            "Days you rated the activity higher than average vs. average or lower"
+        )
+plot
 ```
 
 <br>
@@ -267,11 +315,18 @@ The value in the lower left corner of each plot is the Spearman correlation coef
 :::
 
 ```{python}
-create_rating_scatterplot_with_correlations(
-    rating_scatterplot_data, 
-    correlation_lollipop_plot_data, 
-    goodness_cmap_hexcodes
-)
+if survey_data.empty:
+    plot = create_placeholder("plot")
+else:
+    if rating_scatterplot_data["activity_score"].isnull().all():
+        plot = create_placeholder("plot")
+    else: 
+        plot = create_rating_scatterplot_with_correlations(
+            rating_scatterplot_data, 
+            correlation_lollipop_plot_data, 
+            goodness_cmap_hexcodes
+        )
+plot
 ```
 
 <br>

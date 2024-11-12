@@ -1,23 +1,23 @@
 title: "BALANCE mid-study report for testjen"
 author: "Mobile Sensing + Health Institute"
 date: today
-format: 
-    html:
-        toc: true
-        toc-location: left
-        toc-color: "#3F51B5"
-        number-sections: false
-        theme: cosmo
-        max-width: 2400px
-        fontsize: 1em
-        self-contained: true
-        embed-resources: true
-        fig-dpi: 2000
-        fig-align: right
-        page-layout: full
-        linkcolor: "#3F51B5"
+format:
+  html:
+    toc: true
+    toc-location: left
+    toc-color: "#3F51B5"
+    number-sections: false
+    theme: cosmo
+    max-width: 2400px
+    fontsize: 1em
+    self-contained: true
+    embed-resources: true
+    fig-dpi: 2000
+    fig-align: right
+    page-layout: full
+    linkcolor: "#3F51B5"
 echo: false
-message: false 
+message: false
 warning: false
 from: "markdown+emoji"
-output-file: "balance_report_testjen_v2.html"
+output-file: "balance_report_testjen.html"

@@ -16,6 +16,10 @@ __pycache__/
 .DS_Store
 
 .environment.yml
+environment_old.yml
 src/theme.scss
 src/plot_utils.py
 src/test_data_pull_files
+src/output/*
+!/src/output/.gitkeep
+src/.quarto/

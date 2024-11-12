@@ -40,6 +40,10 @@ def create_activity_day_of_week_table(activity_data, activity_frequencies, activ
             columns=day_of_week_columns, 
             domain=[0, 100]
         )
+        .tab_spanner(
+            label="Percent of days with completed surveys",
+            columns=day_of_week_columns
+        )
         .tab_style(
             style=style.borders(sides=["right"], color="#D3D3D3", weight="1px"),
             locations=loc.body(columns=["Activity"])

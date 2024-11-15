@@ -96,4 +96,52 @@ def pull_daily_survey_data(pid):
     survey_data = pd.read_sql(survey_query, con)
     survey_data_clean = clean_survey_data(survey_data)
 
+    con.close()
     return survey_data_clean
+
+def generate_fitbit_query(pid):
+    return f""" 
+    select
+        pId as pid, 
+        date, 
+        fitbitDataType as fitbit_data_type, 
+        value as fitbit_data_value
+    from fitbit_data
+    where 
+        pId = '{pid}' and 
+        date >= (select startDate from user_study_phases where pId = '{pid}' and phaseID = 'PHASE_1') and
+	    date <= (select endDate from user_study_phases where pId = '{pid}' and phaseID = 'PHASE_1'); 
+    """
+
+def clean_fitbit_data(fitbit_data):
+    fitbit_data_clean = (
+        fitbit_data
+        .pivot(
+            index=["pid", "date"], 
+            columns="fitbit_data_type", 
+            values="fitbit_data_value"
+        )
+        .reset_index()
+        .filter(["pid", "date", "heartrate", "sleep", "steps"])
+        .fillna({"heartrate":0, "sleep":0, "steps":0})
+        .assign(
+            date = lambda x: pd.to_datetime(x["date"]),
+            has_fitbit = lambda x: np.where(x["heartrate"] == 0, 0, 1)
+        )
+    )
+    return fitbit_data_clean
+
+def pull_daily_fitbit_data(pid):
+    GROUP = "balance-test"
+
+    credentials = load_credentials(GROUP)
+    con = connect_to_database(credentials)
+    fitbit_query = generate_fitbit_query(pid)
+    fitbit_data = pd.read_sql(fitbit_query, con)
+    if not fitbit_data.empty:
+        fitbit_data_clean = clean_fitbit_data(fitbit_data)
+    else:
+        fitbit_data_clean = pd.DataFrame(columns=["pid", "date", "heartrate", "sleep", "steps"])
+
+    con.close()
+    return fitbit_data_clean

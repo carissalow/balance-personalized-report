@@ -26,19 +26,22 @@ def rescale_with_midpoint(data, midpoint=0):
             return 0.5 + 0.5 * (x - midpoint) / (max_val - midpoint)
     return np.vectorize(rescale_func)(data)
 
-def get_value_box_data(data):
+def get_value_box_data(survey_data, fitbit_data):
     value_descriptions = [
         "Surveys completed", 
         "Longest survey completion streak", 
         "Average goodness rating", 
         "Total activities logged", 
         "Unique activities logged", 
-        "Average activity rating"
+        "Average activity rating",
+        "Days with Fitbit data",
+        "Average step count",
+        "Average hours of sleep"
     ]
 
-    if not data.empty:
+    if not survey_data.empty:
         longest_streak = (
-            data
+            survey_data
             .filter(["survey_id", "date"])
             .drop_duplicates()
             .reset_index(drop=True)
@@ -50,17 +53,17 @@ def get_value_box_data(data):
             .iloc[0]
         )
 
-        value_box_stats = pd.DataFrame({
-            "n_surveys": [data["survey_id"].drop_duplicates().shape[0]],
+        survey_value_box_stats = pd.DataFrame({
+            "n_surveys": [survey_data["survey_id"].drop_duplicates().shape[0]],
             "longest_streak_days": [longest_streak],
-            "avg_goodness": [data[["survey_id", "goodness_score"]].drop_duplicates()["goodness_score"].mean().round(1)],
-            "n_activities": [data[["survey_id", "activity_id"]].drop_duplicates().shape[0]],
-            "n_distinct_activities": [data[["activity_id"]].drop_duplicates().shape[0]],
-            "avg_activity_score": [data["activity_score"].replace(-1, np.nan).mean().round(1) if not np.isnan(data["activity_score"].replace(-1, np.nan).mean()) else np.nan]
+            "avg_goodness": [survey_data[["survey_id", "goodness_score"]].drop_duplicates()["goodness_score"].mean().round(1)],
+            "n_activities": [survey_data[["survey_id", "activity_id"]].drop_duplicates().shape[0]],
+            "n_distinct_activities": [survey_data[["activity_id"]].drop_duplicates().shape[0]],
+            "avg_activity_score": [survey_data["activity_score"].replace(-1, np.nan).mean().round(1) if not np.isnan(survey_data["activity_score"].replace(-1, np.nan).mean()) else np.nan]
         })
-
+    
     else:
-        value_box_stats = pd.DataFrame({
+        survey_value_box_stats = pd.DataFrame({
             "n_surveys": [0],
             "longest_streak_days": [0],
             "avg_goodness": [np.nan],
@@ -69,10 +72,26 @@ def get_value_box_data(data):
             "avg_activity_score": [np.nan]
         })
 
+    if not fitbit_data.empty:
+        fitbit_value_box_stats = pd.DataFrame({
+            "days_with_fitbit": [fitbit_data["has_fitbit"].sum()],
+            "average_steps": [fitbit_data[fitbit_data["has_fitbit"] == 1]["steps"].mean().round(0).astype(int) if not np.isnan(fitbit_data[fitbit_data["has_fitbit"] == 1]["steps"].mean()) else np.nan],
+            "average_sleep": [fitbit_data[fitbit_data["has_fitbit"] == 1]["sleep"].mean().round(0).astype(int) if not np.isnan(fitbit_data[fitbit_data["has_fitbit"] == 1]["sleep"].mean()) else np.nan],
+        })
+    
+    else:
+        fitbit_value_box_stats = pd.DataFrame({
+            "days_with_fitbit": [0],
+            "average_steps": [np.nan],
+            "average_sleep": [np.nan]
+        })
+
+    value_box_stats = pd.concat([survey_value_box_stats, fitbit_value_box_stats], axis=1)
+
     value_box_data = (
         value_box_stats
         .melt()
-        .assign(value=lambda x: x["value"].map("{:.1f}".format).str.replace(".0", "").str.replace("nan", "N/A"))
+        .assign(value=lambda x: x["value"].map("{:,.1f}".format).str.replace(".0", "").str.replace("nan", "N/A"))
         .assign(description=value_descriptions)
         .assign(variable = lambda x: pd.Categorical(x["variable"], categories=x["variable"].tolist()))
         .assign(
@@ -496,3 +515,27 @@ def get_correlation_lollipop_plot_data(activity_data, goodness_data, corr_method
         .assign(r_rescaled = lambda x: rescale_with_midpoint(x["r"], 0))
     )
     return corr_lollipop_plot_data
+
+def get_fitbit_scatterplot_data(fitbit_data, goodness_data, corr_method="spearman"):
+    fitbit_scatterplot_data = (
+        goodness_data
+        .filter(["survey_id", "date", "goodness_score"])
+        .merge(fitbit_data[["date", "has_fitbit", "steps", "sleep"]], on=["date"], how="left")
+        .fillna({"has_fitbit": 0})
+        .query("has_fitbit == 1")
+        .reset_index(drop=True)
+        .melt(id_vars=["survey_id", "date", "goodness_score", "has_fitbit"])
+        .rename(columns={"variable":"fitbit_data_type"})
+    )
+
+    fitbit_correlations = (
+        fitbit_scatterplot_data
+        .groupby("fitbit_data_type")["value"]
+        .corr(fitbit_scatterplot_data["goodness_score"], method=corr_method)
+        .reset_index()
+        .rename(columns={"value": "r"})
+        .fillna(0)
+        .sort_values("r", ascending=False)
+    )
+
+    return fitbit_scatterplot_data, fitbit_correlations

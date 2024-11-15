@@ -12,7 +12,7 @@ import pandas as pd
 import plotnine as p9 
 
 from great_tables import *
-from pull_data import pull_daily_survey_data
+from pull_data import pull_daily_survey_data, pull_daily_fitbit_data
 from wrangle_data_for_plots import *
 from create_plots import *
 from create_tables import *
@@ -39,7 +39,8 @@ frequency_cmap_hexcodes = get_cmap_hexcodes(frequency_cmap_discrete, n_colors=le
 
 ```{python}
 survey_data = pull_daily_survey_data(pid)
-value_box_data = get_value_box_data(survey_data)
+fitbit_data = pull_daily_fitbit_data(pid)
+value_box_data = get_value_box_data(survey_data, fitbit_data)
 
 if not survey_data.empty:
     # goodness
@@ -74,6 +75,9 @@ if not survey_data.empty:
 
     rating_scatterplot_data = get_rating_scatterplot_data(activity_data, goodness_data)
     correlation_lollipop_plot_data = get_correlation_lollipop_plot_data(activity_data, goodness_data, corr_method="spearman")
+
+    if not fitbit_data.empty:
+        fitbit_scatterplot_data, fitbit_correlations = get_fitbit_scatterplot_data(fitbit_data, goodness_data)
 ```
 
 <br>
@@ -207,8 +211,6 @@ table
 ::: {.callout-tip collapse="true"}
 ## How to read the table
 This table displays on days you did each activity how frequently you also did other activities. **Never** is defined as 0%, **Rarely** as more than 0% but less than 33%, **Sometimes** as 33% or more but less than 67%, **Often** as 67% or more but less than 100%, and **Always** as 100% of days on which you did activity **Y**. Activities are arranged in order of their overall frequency, and related activities are arranged by percent. Activities that you did every day have been omitted from both activites and related activities. 
-
-
 :::
 
 ```{python}
@@ -326,6 +328,38 @@ else:
             correlation_lollipop_plot_data, 
             goodness_cmap_hexcodes
         )
+plot
+```
+
+<br>
+<br>
+
+## Goodness ratings & Fitbit
+
+### Correlations between goodness ratings & sleep and steps
+
+::: {.callout-tip collapse="true"}
+## How to read the plot
+In this plot, your daily hours of sleep and total steps, measured by your Fitbit (**Y**), are plotted against your same-day daily goodness ratings (**X**). The color of each point reflects the daily goodness rating. 
+
+The value in the lower left corner of each plot is the Spearman correlation coefficient between your daily sleep or steps and your same-day goodness ratings. A **negative correlation (red)** reflects that the more (or less) sleep you got or steps you took, the lower (or higher) you tended to rate your same-day goodness (or vice versa). A **positive correlation (green)** reflects that the more (or less) sleep you got or steps you took, the higher (or lower) you tended to rate your same-day goodness (or vice versa). Larger correlation coefficient values reflect that these associations are stronger. Correlations between goodness and sleep or steps are equal to 0 (grey) if there is no association, or if there was not enough variability in your goodness ratings or Fitbit measurements.  
+:::
+
+```{python}
+if survey_data.empty:
+    plot = create_placeholder("plot")
+else:
+    if fitbit_data.empty:
+        plot = create_placeholder("plot")
+    else:
+        if fitbit_scatterplot_data["value"].isnull().all():
+            plot = create_placeholder("plot")
+        else: 
+            plot = create_fitbit_scatterplot(
+                fitbit_scatterplot_data, 
+                fitbit_correlations,
+                goodness_cmap_hexcodes
+            )
 plot
 ```
 

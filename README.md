@@ -41,8 +41,9 @@ bash render_participant_report.sh PID
 
 Steps of the analysis include:
 
-1. Pulling raw data from the BALANCE MySQL database  
-2. Wrangling and summarizing data for tables and plots  
-3. Rendering a personalized data visualization report  
+1. Pulling the participant's Phase 1 daily survey and Fitbit data from the study's MySQL database  
+2. Wrangling and summarizing those data for tables and plots  
+3. Populating the Quarto report template with those visualizations
+4. Rendering the personalized report as an HTML file 
 
 Rendered participant-specific reports can be found in `output/balance_report_[PID].html`.    

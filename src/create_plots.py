@@ -57,8 +57,8 @@ def create_placeholder(placeholder_type=["plot", "table"], width=10):
 def create_value_boxes(value_box_data):
     INDIGO = "#3F51B5"
     WIDTH=12
-    HEIGHT=2.5
-    NROW=2
+    HEIGHT=2.8
+    NROW=3
     NCOL=3
 
     plot = (
@@ -919,6 +919,67 @@ def create_correlation_lollipop_plot(corr_lollipop_plot_data, cmap_hexcodes, cor
             axis_title=p9.element_text(family="DejaVu Sans", size=12, face="bold"),
             axis_ticks=p9.element_line(color="white"),
             plot_title=p9.element_text(family="DejaVu Sans", face="bold", size=14, ha="left")
+        )
+    )
+    return plot
+
+def create_fitbit_scatterplot(fitbit_scatterplot_data, fitbit_correlations, cmap_hexcodes):
+    HEIGHT = 4
+
+    fitbit_data_type_to_title = {
+        "steps":"Steps",
+        "sleep":"Hours of sleep"
+    }
+
+    scatterplot_annotations = (
+        fitbit_correlations
+        .assign(
+            r_cat = lambda x: x["r"].case_when([
+                (x["r"] == 0, np.nan), 
+                (x["r"] < 0, 0),
+                (x["r"] > 0, 10),
+            ]),
+            label = lambda x: "r=" + x["r"].round(2).astype(str),
+            x = 0,
+            y = 0
+        )
+    )
+
+    plot = (
+        p9.ggplot(data=fitbit_scatterplot_data.replace(fitbit_data_type_to_title).dropna())
+        + p9.geom_point(
+            mapping=p9.aes(x="goodness_score", y="value", color="goodness_score"),
+            size=5,
+            alpha=0.7
+        )
+        + p9.geom_text(
+            data = scatterplot_annotations.replace(fitbit_data_type_to_title),
+            mapping = p9.aes(x="x", y="y", label="label", color="r_cat"),
+            parse=True,
+            ha="left",
+            nudge_y=-0.5,
+            nudge_x=-0.5,
+            family="DejaVu Sans"
+        )
+        + p9.facet_wrap("fitbit_data_type", scales="free_y", ncol=2)
+        + p9.scale_x_continuous(limits=[-0.5, 10.5], breaks=[0, 2, 4, 6, 8, 10], expand=[0, 0.5, 0, 0.5])
+        + p9.scale_y_continuous(labels=lambda y: [f"{i:,}".replace(".0", "") for i in y])
+        + p9.scale_color_gradientn(colors=cmap_hexcodes, na_value="grey")
+        + p9.labs(
+            x="Goodness rating",
+            y="Fitbit measurement"
+        )
+        + p9.theme_bw()
+        + p9.theme(
+            figure_size=(10, HEIGHT),
+            legend_position="none",
+            panel_grid_minor=p9.element_blank(),
+            strip_text=p9.element_text(family="DejaVu Sans", size=10, face="bold", color="white"),
+            strip_background=p9.element_rect(fill="#3F51B5"),
+            axis_text=p9.element_text(family="DejaVu Sans", size=12),
+            axis_title=p9.element_text(family="DejaVu Sans", size=12, face="bold"),
+            axis_ticks=p9.element_line(color="white"),
+            plot_title=p9.element_text(family="DejaVu Sans", face="bold", size=12, ha="left")
         )
     )
     return plot

@@ -261,7 +261,9 @@ def get_goodness_and_activity_rating_data(data):
         data
         .filter(["date", "day_of_week", "day_name", "goodness_score", "activity_id", "activity_score"])
         .drop_duplicates()
-        .reset_index(drop=True)
+        # in case there are duplicate entries for activities, arbitrarily select the first one
+        .groupby(["date", "day_of_week", "day_name", "goodness_score", "activity_id"]).activity_score.first()
+        .reset_index(drop=False)
         .assign(activity_score = lambda x: x["activity_score"].replace({-1:np.nan}))
         .assign(activity_score_average = lambda x: x.groupby("activity_id")["activity_score"].transform("mean"))
         .assign(activity_score_above_average = lambda x: np.where(x["activity_score"] > x["activity_score_average"], 1, 0))

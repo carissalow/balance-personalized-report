@@ -52,6 +52,20 @@ def generate_survey_query(pId):
         r.pID = '{pId}';
     """
 
+def generate_fitbit_query(pid):
+    return f""" 
+    select
+        pId as pid, 
+        date, 
+        fitbitDataType as fitbit_data_type, 
+        value as fitbit_data_value
+    from fitbit_data
+    where 
+        pId = '{pid}' and 
+        date >= (select startDate from user_study_phases where pId = '{pid}' and phaseID = 'PHASE_1') and
+	    date <= (select endDate from user_study_phases where pId = '{pid}' and phaseID = 'PHASE_1'); 
+    """
+
 def clean_goodness_scores(data):
     data["goodness_score"] = data["goodness_score"].fillna(-1)
     return data
@@ -86,33 +100,6 @@ def clean_survey_data(data):
         .pipe(clean_dates)
     )
 
-def pull_daily_survey_data(pid):
-    GROUP = "balance-test"
-
-    credentials = load_credentials(GROUP)
-    con = connect_to_database(credentials)
-
-    survey_query = generate_survey_query(pid)
-    survey_data = pd.read_sql(survey_query, con)
-    survey_data_clean = clean_survey_data(survey_data)
-
-    con.close()
-    return survey_data_clean
-
-def generate_fitbit_query(pid):
-    return f""" 
-    select
-        pId as pid, 
-        date, 
-        fitbitDataType as fitbit_data_type, 
-        value as fitbit_data_value
-    from fitbit_data
-    where 
-        pId = '{pid}' and 
-        date >= (select startDate from user_study_phases where pId = '{pid}' and phaseID = 'PHASE_1') and
-	    date <= (select endDate from user_study_phases where pId = '{pid}' and phaseID = 'PHASE_1'); 
-    """
-
 def clean_fitbit_data(fitbit_data):
     fitbit_data_clean = (
         fitbit_data
@@ -130,6 +117,21 @@ def clean_fitbit_data(fitbit_data):
         )
     )
     return fitbit_data_clean
+
+def pull_daily_survey_data(pid):
+    GROUP = "balance-test"
+
+    credentials = load_credentials(GROUP)
+    con = connect_to_database(credentials)
+
+    survey_query = generate_survey_query(pid)
+    survey_data = pd.read_sql(survey_query, con)
+    # in case there are dates with survey_response data but not survey_response_details data
+    survey_data = survey_data.dropna().reset_index(drop=True)
+    survey_data_clean = clean_survey_data(survey_data)
+
+    con.close()
+    return survey_data_clean
 
 def pull_daily_fitbit_data(pid):
     GROUP = "balance-test"

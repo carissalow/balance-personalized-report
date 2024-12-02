@@ -19,7 +19,7 @@ def connect_to_database(credentials):
     connection = engine.connect()
     return connection
 
-def generate_survey_query(pId):
+def generate_survey_query(pid):
     return f""" 
     select 
         r.surveyId as survey_id, 
@@ -32,7 +32,7 @@ def generate_survey_query(pId):
         r.goodnessScore as goodness_score, 
         d.activityId as activity_id, 
         a.name as activity_name,
-        d.duration as activity_score
+        d.score as activity_score
     from survey_responses as r
     left join survey_response_details as d on r.surveyId = d.surveyId
     left join (
@@ -49,7 +49,9 @@ def generate_survey_query(pId):
     ) as p on r.pId = p.pId
     where 
         r.sId = 'DAILY' and 
-        r.pID = '{pId}';
+        r.pID = '{pid}' and
+        r.date >= p.start_date and
+	    r.date <= p.end_date;
     """
 
 def generate_fitbit_query(pid):
@@ -71,8 +73,7 @@ def clean_goodness_scores(data):
     return data
 
 def clean_activity_scores(data):
-    SWITCH_DATE = "2024-10-18" # approx date we switched from activity duration to activity rating
-    data["activity_score"] = np.where(data["date"] <= pd.to_datetime(SWITCH_DATE).date(), -1, data["activity_score"])
+    data["activity_score"] = data["activity_score"].fillna(-1)
     return data
 
 def clean_activity_names(data):
@@ -128,7 +129,13 @@ def pull_daily_survey_data(pid):
     survey_data = pd.read_sql(survey_query, con)
     # in case there are dates with survey_response data but not survey_response_details data
     survey_data = survey_data.dropna().reset_index(drop=True)
-    survey_data_clean = clean_survey_data(survey_data)
+    survey_data.to_csv(f"../data/raw/survey_data_{pid}.csv", index=False)
+
+    if not survey_data.empty:
+        survey_data_clean = clean_survey_data(survey_data)
+    else: 
+        survey_data_clean = pd.DataFrame(columns=["survey_id", "pid", "start_date", "end_date", "date", "start_time", "end_time", "goodness_score", "activity_id", "activity_name", "activity_score"])
+    survey_data_clean.to_csv(f"../data/processed/survey_data_clean_{pid}.csv")
 
     con.close()
     return survey_data_clean
@@ -140,10 +147,13 @@ def pull_daily_fitbit_data(pid):
     con = connect_to_database(credentials)
     fitbit_query = generate_fitbit_query(pid)
     fitbit_data = pd.read_sql(fitbit_query, con)
+    fitbit_data.to_csv(f"../data/raw/fitbit_data_{pid}.csv", index=False)
+
     if not fitbit_data.empty:
         fitbit_data_clean = clean_fitbit_data(fitbit_data)
     else:
         fitbit_data_clean = pd.DataFrame(columns=["pid", "date", "heartrate", "sleep", "steps"])
+    fitbit_data_clean.to_csv(f"../data/processed/fitbit_data_clean_{pid}.csv", index=False)
 
     con.close()
     return fitbit_data_clean

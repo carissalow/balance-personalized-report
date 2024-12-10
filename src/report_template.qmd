@@ -92,7 +92,7 @@ Here's a snapshot of your month:
 create_value_boxes(value_box_data)
 ```
 
-We will review your goodness and activity data from Phase 1 to help you identify a handful of meaningful activities to focus on in Phase 2. 
+We will review your daily goodness and activity data from Phase 1 to help you identify a handful of meaningful activities to focus on in Phase 2. 
 
 <br>
 
@@ -122,7 +122,7 @@ plot
 
 ::: {.callout-tip collapse="true"}
 ## How to read the plot
-This plot displays your average and range of goodness ratings. The width of each ribbon reflects the range of your goodness ratings overall during the study, or on day of the week **Y**. The **left** dot is your **minimum** goodness rating, the **center** dot is your **average** goodness rating, and the **right** dot is your **maximum** goodness rating. Only the center average dot is displayed if your minimum and maximum goodness ratings were equal.    
+This plot displays your average and range of daily goodness ratings. The width of each ribbon reflects the range of your goodness ratings overall during the study, or on day of the week **Y**. The **left** dot is your **minimum** goodness rating, the **center** dot is your **average** goodness rating, and the **right** dot is your **maximum** goodness rating. Only the center average dot is displayed if your minimum and maximum goodness ratings were equal.    
 :::
 
 ```{python}
@@ -242,7 +242,7 @@ table
 
 ::: {.callout-tip collapse="true"}
 ## How to read the plot
-This plot displays your average and range of goodness ratings on days you did each activity. The width of each ribbon reflects the range of your goodness ratings on days you did activity **Y**. The **left** dot is your **minimum** goodness rating, the **center** dot is your **average** goodness rating, and the **right** dot is your **maximum** goodness rating. Only the center average dot is displayed if your minimum and maximum goodness ratings were equal. Activites are ordered by average goodness rating.  
+This plot displays your average and range of daily goodness ratings on days you did each activity. The width of each ribbon reflects the range of your goodness ratings on days you did activity **Y**. The **left** dot is your **minimum** goodness rating, the **center** dot is your **average** goodness rating, and the **right** dot is your **maximum** goodness rating. Only the center average dot is displayed if your minimum and maximum goodness ratings were equal. Activites are ordered by average goodness rating.  
 :::
 
 ```{python}
@@ -263,7 +263,7 @@ plot
 
 ::: {.callout-tip collapse="true"}
 ## How to read the plot
-This plot displays the percent difference in average goodness rating on days you did vs. did not do each activity. On days you did activity **Y**, your average same-day goodness rating was **X% worse** (red-yellow) or **better** (yellow-green) than on days you did not do that activity. Differences are 0% if there was no difference in average same-day goodness between days you did and did not do the activity, or if you did the activity every day.  
+This plot displays the percent difference in average daily goodness rating on days you did vs. did not do each activity. On days you did activity **Y**, your average same-day goodness rating was **X% worse** (red-yellow) or **better** (yellow-green) than on days you did not do that activity. Differences are 0% if there was no difference in average same-day goodness between days you did and did not do the activity, or if you did the activity every day.  
 :::
 
 ```{python}
@@ -287,7 +287,7 @@ plot
 
 ::: {.callout-tip collapse="true"}
 ## How to read the plot
-This plot displays the percent difference in average goodness rating on days you did each activity and rated its enjoyment as higher than your average rating for that activity vs. days you did each activity and rated its enjoyment as average or below average for that activity. On days you did activity **Y** and rated it higher than average, your average same-day goodness rating was **X% worse** (red-yellow) or **better** (yellow-green) than on days you did that activity and rated it average or lower. Differences are 0% if there was no difference in average same-day goodness between days you rated the activity higher than average or average or lower, or if you rated the activity the same every day.  
+This plot displays the percent difference in average daily goodness rating on days you did each activity and rated its enjoyment as higher than your average rating for that activity vs. days you did each activity and rated its enjoyment as average or below average for that activity. On days you did activity **Y** and rated it higher than average, your average same-day goodness rating was **X% worse** (red-yellow) or **better** (yellow-green) than on days you did that activity and rated it average or lower. Differences are 0% if there was no difference in average same-day goodness between days you rated the activity higher than average or average or lower, or if you rated the activity the same every day.  
 :::
 
 ```{python}

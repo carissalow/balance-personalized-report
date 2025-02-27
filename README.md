@@ -47,3 +47,27 @@ Steps of the analysis include:
 4. Rendering the personalized report as an HTML file 
 
 Rendered participant-specific reports can be found in `output/balance_report_[PID].html`.    
+
+<br>
+
+---
+
+## Change log 
+
+### February 2025
+- Fix phase 1 date range (end date in database is 1 day after end date in REDCap)
+- Fix color scale mapping for scatter plots  
+
+### December 2024  
+- Update data pull script  
+- Change "goodness" to "daily goodness"  
+
+### November 2024 
+- Replace heatmaps with tables  
+- Drop activity clusters  
+- Improve plot scaling  
+- Add column spanner to activity by day of week table  
+- Add report parameterization
+- Add Fitbit data to report  
+- Fix bugs caused by missing or duplicated data  
+- Fix miscellaneous bugs  

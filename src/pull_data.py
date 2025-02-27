@@ -51,7 +51,7 @@ def generate_survey_query(pid):
         r.sId = 'DAILY' and 
         r.pID = '{pid}' and
         r.date >= p.start_date and
-	    r.date <= p.end_date;
+	    r.date < p.end_date;
     """
 
 def generate_fitbit_query(pid):
@@ -65,7 +65,7 @@ def generate_fitbit_query(pid):
     where 
         pId = '{pid}' and 
         date >= (select startDate from user_study_phases where pId = '{pid}' and phaseID = 'PHASE_1') and
-	    date <= (select endDate from user_study_phases where pId = '{pid}' and phaseID = 'PHASE_1'); 
+	    date < (select endDate from user_study_phases where pId = '{pid}' and phaseID = 'PHASE_1'); 
     """
 
 def clean_goodness_scores(data):

@@ -858,7 +858,7 @@ def create_rating_scatterplot_with_correlations(rating_scatterplot_data, corr_lo
         + p9.facet_wrap("activity_name", ncol=4)
         + p9.scale_x_continuous(limits=[-0.5, 10.5], breaks=[0, 2, 4, 6, 8, 10], expand=[0, 0.5, 0, 0.5])
         + p9.scale_y_continuous(limits=[-0.5, 10.5], breaks=[0, 2, 4, 6, 8, 10], expand=[0, 0.5, 0, 0.5])
-        + p9.scale_color_gradientn(colors=cmap_hexcodes, na_value="grey")
+        + p9.scale_color_gradientn(colors=cmap_hexcodes, na_value="grey", limits=[0, 10])
         + p9.labs(
             x="Goodness rating",
             y="Activity rating"
@@ -964,7 +964,7 @@ def create_fitbit_scatterplot(fitbit_scatterplot_data, fitbit_correlations, cmap
         + p9.facet_wrap("fitbit_data_type", scales="free_y", ncol=2)
         + p9.scale_x_continuous(limits=[-0.5, 10.5], breaks=[0, 2, 4, 6, 8, 10], expand=[0, 0.5, 0, 0.5])
         + p9.scale_y_continuous(labels=lambda y: [f"{i:,}".replace(".0", "") for i in y])
-        + p9.scale_color_gradientn(colors=cmap_hexcodes, na_value="grey")
+        + p9.scale_color_gradientn(colors=cmap_hexcodes, na_value="grey", limits=[0, 10])
         + p9.labs(
             x="Goodness rating",
             y="Fitbit measurement"

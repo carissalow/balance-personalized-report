@@ -25,6 +25,17 @@ Personalized data visualizations and analyses for participants in the **Behavior
     conda env create -f environment.yml -n balance
     ```
 
+5. Create a `credentials.yaml` file with the following format, filling in the host, user, and password fields:  
+
+    ```yaml
+    balance:
+        database: "balance"
+        host: "[BALANCE study database EC2 instance URL]"
+        user: "[BALANCE study database user name]"
+        password: "[BALANCE study database user password]"
+        port: 3306
+    ```
+
 <br>
 
 ---

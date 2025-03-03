@@ -120,7 +120,7 @@ def clean_fitbit_data(fitbit_data):
     return fitbit_data_clean
 
 def pull_daily_survey_data(pid):
-    GROUP = "balance-test"
+    GROUP = "balance"
 
     credentials = load_credentials(GROUP)
     con = connect_to_database(credentials)
@@ -141,7 +141,7 @@ def pull_daily_survey_data(pid):
     return survey_data_clean
 
 def pull_daily_fitbit_data(pid):
-    GROUP = "balance-test"
+    GROUP = "balance"
 
     credentials = load_credentials(GROUP)
     con = connect_to_database(credentials)

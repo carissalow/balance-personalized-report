@@ -207,7 +207,15 @@ def get_activity_bar_plot_data(enjoyment_per_activity):
         enjoyment_per_activity
         .assign(activity_name = lambda x: pd.Categorical(x["activity_name"], categories=activity_name_categories))
         .assign(activity_name_prop_of_days = lambda x: x["activity_name_count"]/28)
-        .assign(label_location = lambda x: np.where(x["activity_name_count"] < 10, x["activity_name_count"] - 0.5, x["activity_name_count"] - 1))
+        .assign(
+            label_location = lambda x: x["activity_name_count"].case_when(
+                caselist=[
+                    (x["activity_name_count"] < 10, x["activity_name_count"] - 0.5),
+                    ((x["activity_name_count"] >= 10) & (x["activity_name_count"].max() < 20), x["activity_name_count"] - 1),
+                    ((x["activity_name_count"] >= 10) & (x["activity_name_count"].max() >= 20), x["activity_name_count"] - 1.25)
+                ]
+            )
+        )
     )
     return activity_frequencies
 

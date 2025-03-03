@@ -119,10 +119,18 @@ def create_goodness_bar_plot(goodness_bar_plot_data, cmap_hexcodes):
         ybreaks = range(0, ylim+1, 1)
         height = 4 
         nudge = 0.05
-    else:
+    elif ylim < 12:
         ybreaks = range(0, ylim+1, 2)
         height = 5
         nudge = 0.1
+    elif ylim < 20:
+        ybreaks = range(0, ylim+1, 2)
+        height = 5
+        nudge = 0.2
+    else:
+        ybreaks = range(0, ylim+1, 5)
+        height = 5
+        nudge = 0.4
 
     plot = (
         p9.ggplot()

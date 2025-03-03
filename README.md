@@ -57,6 +57,7 @@ Rendered participant-specific reports can be found in `output/balance_report_[PI
 ### February 2025
 - Fix phase 1 date range (end date in database is 1 day after end date in REDCap)
 - Fix color scale mapping for scatter plots  
+- Improve label positioning for bar plots
 
 ### December 2024  
 - Update data pull script  

@@ -65,7 +65,7 @@ Rendered participant-specific reports can be found in `output/balance_report_[PI
 
 ## Change log 
 
-## March 2025 
+### March 2025 
 - Fix bug related to Fitbit data cleaning when there were heartrate data but no steps or sleep data present in the database  
 - Set infinite percent differences (i.e., due to change from score equal to 0 to score greater than 0) to 100%  
 

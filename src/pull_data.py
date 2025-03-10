@@ -117,6 +117,11 @@ def clean_fitbit_data(fitbit_data):
             has_fitbit = lambda x: np.where(x["heartrate"] == 0, 0, 1)
         )
     )
+    if not fitbit_data_clean.empty:
+        required_cols = ["heartrate", "sleep", "steps"]
+        for required_col in required_cols:
+            if not required_col in fitbit_data_clean.columns:
+                fitbit_data_clean[required_col] = 0
     return fitbit_data_clean
 
 def pull_daily_survey_data(pid):

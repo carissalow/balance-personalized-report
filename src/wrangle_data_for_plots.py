@@ -466,6 +466,10 @@ def get_activity_lollipop_plot_data(data, goodness_and_activity_endorsments):
                 percent_difference = lambda x: ((x["average_goodness_yes"] - x["average_goodness_no"])/x["average_goodness_no"]*100).round(1),
                 segment_end=0
             )
+            # if percent difference is infinite (i.e., due to change from 0), set to 100%
+            .assign(
+                percent_difference = lambda x: np.where(np.isinf(x["percent_difference"]), 100, x["percent_difference"])
+            )
             .fillna({"percent_difference": 0})
             .sort_values("percent_difference")
             .merge(data[["activity_id", "activity_name"]].drop_duplicates(), how="left", on="activity_id")

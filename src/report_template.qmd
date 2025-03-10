@@ -263,7 +263,7 @@ plot
 
 ::: {.callout-tip collapse="true"}
 ## How to read the plot
-This plot displays the percent difference in average daily goodness rating on days you did vs. did not do each activity. On days you did activity **Y**, your average same-day goodness rating was **X% worse** (red-yellow) or **better** (yellow-green) than on days you did not do that activity. Differences are 0% if there was no difference in average same-day goodness between days you did and did not do the activity, or if you did the activity every day.  
+This plot displays the percent difference in average daily goodness rating on days you did vs. did not do each activity. On days you did activity **Y**, your average same-day goodness rating was **X% worse** (red-yellow) or **better** (yellow-green) than on days you did not do that activity. Differences are 0% if there was no difference in average same-day goodness between days you did and did not do the activity, or if you did the activity every day. Differences are set to 100% for any activities if your average daily goodness rating was equal to 0 on days you did not do the activity and greater than 0 on days you did do the activity.  
 :::
 
 ```{python}
@@ -287,7 +287,7 @@ plot
 
 ::: {.callout-tip collapse="true"}
 ## How to read the plot
-This plot displays the percent difference in average daily goodness rating on days you did each activity and rated its enjoyment as higher than your average rating for that activity vs. days you did each activity and rated its enjoyment as average or below average for that activity. On days you did activity **Y** and rated it higher than average, your average same-day goodness rating was **X% worse** (red-yellow) or **better** (yellow-green) than on days you did that activity and rated it average or lower. Differences are 0% if there was no difference in average same-day goodness between days you rated the activity higher than average or average or lower, or if you rated the activity the same every day.  
+This plot displays the percent difference in average daily goodness rating on days you did each activity and rated its enjoyment as higher than your average rating for that activity vs. days you did each activity and rated its enjoyment as average or below average for that activity. On days you did activity **Y** and rated it higher than average, your average same-day goodness rating was **X% worse** (red-yellow) or **better** (yellow-green) than on days you did that activity and rated it average or lower. Differences are 0% if there was no difference in average same-day goodness between days you rated the activity higher than average or average or lower, or if you rated the activity the same every day. Differences are set to 100% for any activities if your average daily goodness rating was equal to 0 on days you rated the activity lower than average and greater than 0 on days you rated the activity higher than average.    
 :::
 
 ```{python}

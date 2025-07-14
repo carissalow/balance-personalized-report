@@ -1,6 +1,6 @@
-# balance-personalized-analysis
+# balance-personalized-report
 
-Personalized data visualizations and analyses for participants in the **Behavioral Activation-Led Activity eNgagement for Cancer Empowerment (BALANCE)** study at the Mobile Sensing + Health Institute at the University of Pittsburgh.  
+Personalized data visualization and analysis reports for participants in the **Behavioral Activation-Led Activity eNgagement for Cancer Empowerment (BALANCE)** study at the Mobile Sensing + Health Institute at the University of Pittsburgh. These reports are provided at the midpoint of the study to help participants explore relationships between their daily goodness ratings, activities, and Fitbit steps and sleep data, with the goal of identifying a personalized list of meaningful activities to focus on increasing during the second stage of the intervention. 
 
 <br>
 
@@ -15,13 +15,13 @@ Personalized data visualizations and analyses for participants in the **Behavior
 3. Clone the repository:
 
     ```bash
-    git clone https://github.com/jenniferfedor/balance-personalized-analysis
+    git clone https://github.com/jenniferfedor/balance-personalized-report
     ```
 
 4. Restore the Python virtual environment:
 
     ```bash
-    cd balance-personalized-analysis
+    cd balance-personalized-report
     conda env create -f environment.yml -n balance
     ```
 
